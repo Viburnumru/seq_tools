@@ -58,22 +58,21 @@ A dictionary with the same structure as seqs, but only sequences passed all crit
 Additional functions are stored separately in the folder 'modules':
 1. dna_rna_tools_modules.py
    consist of functions required for sequence check:
-    - is_na checks if sequence contains nucleotides;
-    - na_type checks if sequence contains only one type (DNA or RNA) nucleotides;
+    - *is_na* checks if sequence contains nucleotides;
+    - *na_type* checks if sequence contains only one type (DNA or RNA) nucleotides;
       
    and main functions:
    
-    - funcion transcribe (works only with DNA sequences);
-    - function complement;
-    - function reverse;
-    - function reverse complement;
+    - funcion *transcribe* (works only with DNA sequences);
+    - function *complement* returns complementary strand; 
+    - function *reverse returns* reverse strand;
+    - function *reverse_complement* returns reverse complement strand;
 
-2. filter_fastq_modules.py
-   consist of
-   - gc_count, which returns GC content in %
-   - filter_gc, which filter sequences acccording GC criteria
-   - filter_length, which filter
-   - filter_quality
+2. filter_fastq_modules.py consist of:   
+   - *gc_count*, which returns GC content in %;
+   - *filter_gc*, which returns sequences acccording GC criteria;
+   - *filter_length*, which returns sequences of required length;
+   - *filter_quality*, which returns sequences of required quality threshold.
 
 
 All functions from modules could be imported and used separately.
