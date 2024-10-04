@@ -67,6 +67,7 @@ Additional functions are stored separately in the folder 'modules':
     - function *complement* returns complementary strand; 
     - function *reverse returns* reverse strand;
     - function *reverse_complement* returns reverse complement strand;
+ These functions are case sensitive.
 
 2. filter_fastq_modules.py consist of:   
    - *gc_count*, which returns GC content in %;
@@ -74,6 +75,7 @@ Additional functions are stored separately in the folder 'modules':
    - *filter_length*, which returns sequences of required length;
    - *filter_quality*, which returns sequences of required quality threshold.
 
+These functions requires FASTQ input format (see *Examples of usage*).
 
 All functions from modules could be imported and used separately.
 
