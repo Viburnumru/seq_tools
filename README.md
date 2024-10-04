@@ -39,21 +39,22 @@ You may work directly in the file `seq_tools.py` or import needed modules into y
 
 Main script consist of `filter_fastq` and `run_dna_rna_tools` functions.
 
-`Run_dna_rna_tools` performs the specified operations on a DNA or\and RNA sequence.
-args: positional arguments, strings representing DNA/RNA sequences, the last argument must be a string indicating the type of operation (for example, "transcribe", "reverse", etc.). In case of attempting to pass an incorrect operation type or RNA/DNA sequence, an appropriate error will be printed on the screen.
+`Run_dna_rna_tools` performs the specified operations on a DNA or\and RNA sequence.  
+*args*: positional arguments, strings representing DNA/RNA sequences, the last argument must be a string indicating the type of operation (for example, "transcribe", "reverse", etc.).  
+In case of attempting to pass an incorrect operation type or RNA/DNA sequence, an appropriate error will be printed on the screen.
 
 Returns:
-list: a list of results
-str: a single result
+list: a list of results  
+str: a single result  
 
 `Filter_fastq` filters reads in FASTQ format based on GC content, read length, and read quality.
-Parameters:
-seqs: a dictionary where the keys are read names, and the values are tuples consisting of the sequence and its quality.
-gc_bounds: the GC content interval for filtering (default is (0, 100)).
-length_bounds: the length interval for filtering (default is (0, 2**32)).
-quality_threshold (float): the threshold value for the average quality of the read, default is 0.
-Returns:
-A dictionary with the same structure as seqs.
+Parameters:  
+*seqs*: a dictionary where the keys are read names, and the values are tuples consisting of the sequence and its quality.  
+*gc_bounds*: the GC content interval for filtering (default is (0, 100)).  
+*length_bounds*: the length interval for filtering (default is (0, 2**32)).  
+*quality_threshold*: the threshold value for the average quality of the read, default is 0.  
+Returns:  
+A dictionary with the same structure as seqs.  
 
 ## Modules
 
