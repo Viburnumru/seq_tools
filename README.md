@@ -16,10 +16,9 @@ Author: Anna Kalinina
 ## Contents
 
 - [Installation](#Installation)
-- [Usage](##Usage)
-  - [Main functions](###Main-functions)
+- [Main functions](##Main-functions)
 - [Modules](##modules)
-- [Examples](##examples)
+- [Examples of usage](##examples-of-usage)
 
 ## Installation
 To run `Seq_tools` you need to have Python 3.x installed. To check this: 
@@ -33,9 +32,7 @@ git clone  https://github.com/Viburnumru/seq_tools.git
 The script is not supposed to be used from commandline. Use any Python IDEs to run `seq_tools`.
 You may work directly in the file `seq_tools.py` or import needed modules into your script.
 
-## Usage
-
-### Main functions
+## Main functions
 
 Main script consist of `filter_fastq` and `run_dna_rna_tools` functions.
 
@@ -82,7 +79,7 @@ Additional functions are stored separately in the folder 'modules':
 All functions from modules could be imported and used separately.
 
 
-## Examples
+## Examples of usage
 ```
 
 EXAMPLE_FASTQ = {
