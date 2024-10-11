@@ -1,95 +1,140 @@
+import numbers
+import os
+
+
+def make_bounds(bounds: [int, tuple]) -> tuple:
+    """Converts a given bounds into a tuple format.
+
+    Args:
+        bounds (int, tuple): given upper bound or
+        lower and upper bounds
+
+    Returns:
+        tuple: bounds (lower, upper)
+        in case lower bound was not given returns (0, upper)
+    """
+    if isinstance(bounds, numbers.Real):
+        return (0, bounds)
+    return bounds
+
+
+def is_bounded(x: int, bounds: tuple) -> bool:
+    """Checks if number lays between given bounds
+
+    Args:
+        x (int): number of interest
+        bounds (tuple): bounds (lower, upper)
+
+    Returns:
+        bool: True if number within bounds
+    """
+    return bounds[0] <= x <= bounds[1]
+
+
 def gc_count(na: str) -> float:
     """
-    Функция считает GC-состав.
-    Параметры: строка 'na'.
-    Возвращает значение с float (в процентах).
+    Counts GC in seq.
+    Args:
+        na (string): NA sequence
+    Returns:
+        float: (%) GC content
     """
     na = na.upper()
     return 100 * (na.count("G") + na.count("C")) / len(na)
 
 
-def filter_gc(
-    seqs: dict[str, tuple[str, str]],
-    gc_bounds: tuple[float, float] = (0, 100)
-) -> dict[str, tuple[str, str]]:
+def is_gc_valid(
+    sequence: str, gc_bounds: tuple[float, float] = (0, 100)
+) -> bool:
+    """Checks if sequence valid according GC content
+
+    Args:
+        sequence (str): sequence of interest
+        gc_bounds (tuple[float, float], optional):
+        GC bounds. Defaults to (0, 100).
+
+    Returns:
+        bool: True if GC content of sequence is within GC bounds
     """
-    Функция фильтрует последовательность нуклеотидов по GC-составу.
-    Параметры:
-    seqs: dict[str, tuple[str, str]] -
-    словарь, ключами которого являются названия ридов,
-    а значениями - кортежи, состоящие из сиквенса и его качества.
-    gc_bounds (tuple[float, float]): Интервал GC-состава для фильтрации
-    (по умолчанию (0, 100)).
-    Может приниматься только верхняя граница в виде float.
-    Тогда по умолчанюю нижняя граница считается равной 0.
-    Возвращает словарь вида dict[str, tuple[str, str]],
-    ключами которого являются названия сиквенсов,
-    отфильтрованных по GC-составу ридов,
-    а значениями - кортежи, состоящие из сиквенса и его качества.
+    gc_bounds = make_bounds(gc_bounds)
+    gc = gc_count(sequence)
 
+    return is_bounded(gc, gc_bounds)
+
+
+def is_length_valid(
+    sequence: str, length_bounds: tuple[float, float] = (0, 2**32)
+) -> bool:
+    """Checks if sequence valid according sequence length
+
+    Args:
+        sequence (str): sequence of interest
+        length_bounds (tuple[float, float], optional):
+        length bounds. Defaults to (0, 2**32).
+
+    Returns:
+        bool: True if sequence length is within length bounds
     """
-    filtered_seqs = {}
-    if isinstance(gc_bounds, (int, float)):
-        gc_bounds = (0, gc_bounds)
-    for name, (sequence, quality) in seqs.items():
-        gc = gc_count(sequence)
-        if gc_bounds[0] <= gc <= gc_bounds[1]:
-            filtered_seqs[name] = (sequence, quality)
-    return filtered_seqs
+
+    length_bounds = make_bounds(length_bounds)
+    return is_bounded(len(sequence), length_bounds)
 
 
-def filter_length(
-    seqs: dict[str, tuple[str, str]],
-    length_bounds: tuple[float, float] = (0, 2**32)
-) -> dict[str, tuple[str, str]]:
+def is_quality_valid(quality: str, quality_threshold: float = 0) -> bool:
+    """Checking quality of the sequence
+
+    Args:
+        quality (str): sequence of interest
+        quality_threshold (float, optional): quality bounds. Defaults to 0.
+
+    Returns:
+        bool: True if sequence quality is within quality bounds
     """
-    Функция фильтрует последовательность нуклеотидов по длине рида.
-    Параметры:
-    seqs: dict[str, tuple[str, str]] - словарь, где ключи - это названия ридов,
-    а значения - кортежи, состоящие из прочтения и его качества.
-    length_bounds (tuple[int, int]): Интервал длины для фильтрации
-    (по умолчанию (0, 2**32)).
-    Может приниматься только верхняя граница в виде float.
-    Тогда по умолчанюю нижняя граница считается равной 0.
-    Возвращает словарь вида dict[str, tuple[str, str]],
-    ключами которого являются названия сиквенсов,
-    отфильтрованных по длине рида,
-    а значениями - кортежи, состоящие из сиквенса и его качества.
 
+    average_score = sum(ord(char) - 33 for char in quality) / len(quality)
+    return average_score >= quality_threshold
+
+
+def read_fastq_file(path: str) -> dict[str, tuple[str, str]]:
+    """read FASTQ file and converts data into dictionary
+
+    Args:
+        path (str): path to file
+
+    Returns:
+        dict[str, tuple[str, str]]: dictionary[name, (sequence, quality)]
     """
-    filtered_seqs = {}
-    if isinstance(length_bounds, (int, float)):
-        length_bounds = (0, length_bounds)
-    for name, (sequence, quality) in seqs.items():
-        if length_bounds[0] <= len(sequence) <= length_bounds[1]:
-            filtered_seqs[name] = (sequence, quality)
-    return filtered_seqs
+    with open(path, "r") as file:
+        seqs = {}
+        while True:
+            line = file.readline().strip()
+            if not line:
+                break
+            sequence = file.readline().strip()
+            file.readline()
+            quality = file.readline().strip()
+            name = line[0:].split(" ")[0]
+            seqs[name] = (sequence, quality)
+    return seqs
 
 
-def filter_quality(
-    seqs: dict[str, tuple[str, str]], quality_threshold: float = 0
-) -> dict[str, tuple[str, str]]:
+def write_output_fastq(
+    name: str, sequence: str, quality: str, output_file: str
+) -> None:
+    """Append a single sequence to the output FASTQ file
+    in the 'filtered' directory.
+    Args:
+        name (str): the sequence identifier (e.g., @SEQ_ID in FASTQ format).
+        sequence (str): sequence
+        quality (str): quality in FASTQ format
+        output_path (str): path to output file
     """
-    Функция фильтрует последовательность нуклеотидов
-    по заданному уровню качества рида.
-    Параметры:
-    seqs: dict[str, tuple[str, str]] - словарь,
-    ключами которого являются названия ридов,
-    а значениями - кортежи, состоящие из сиквенса и его качества.
-    quality_threshold (float): Пороговое значение среднего качества рида,
-    по умолчанию 0.
-    Возвращает словарь вида dict[str, tuple[str, str]],
-    ключами которого являются названия сиквенсов, отфильтрованных по качеству,
-    а значениями - кортежи, состоящие из сиквенса и его качества.
+    output_dir = "filtered"
+    os.makedirs(output_dir, exist_ok=True)
+    output_path = os.path.join(output_dir, output_file)
 
-    """
-    filtered_seqs = {}
-
-    for name, (sequence, quality) in seqs.items():
-        quality_scores = []
-        for char in quality:
-            quality_scores.append(ord(char) - 33)
-        average_score = sum(quality_scores) / len(quality_scores)
-        if average_score >= quality_threshold:
-            filtered_seqs[name] = (sequence, quality)
-    return filtered_seqs
+    with open(output_path, "a") as file:
+        file.write(f"{name}\n")
+        file.write(f"{sequence}\n")
+        file.write("+\n")
+        file.write(f"{quality}\n")

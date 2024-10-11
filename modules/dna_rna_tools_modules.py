@@ -1,30 +1,31 @@
+from typing import Union
+
+
 def is_na(seq_na: str) -> bool:
     """
-    Функция проверяет,
-    является ли строка нуклеиновой кислотой.
+    Checking if string is nucleic acid (NA)
 
     Args:
-        seq_na (str): последовательность
+        seq_na (str): NA sequence
 
     Returns:
-        bool: True, если последовательность
-        состоит только из нуклеотидов, иначе False.
+        bool: True, if sequence consist from nucleotides only
     """
     na_list = ["A", "T", "G", "C", "U", "a", "t", "g", "c", "u", "a"]
     return all(ch in na_list for ch in seq_na)
 
 
-def na_type(na: str) -> str or bool:
+def na_type(na: str) -> Union[str, bool]:
     """
-    Функция определяет тип нуклеиновой кислоты.
+    Finding of NA type
 
     Args:
-        na (str): последовательность
+        na (str): sequence
 
     Returns:
-        str or bool: возвращает False, если тип нельзя определить;
-        возвращает строку 'RNA', если последовательность содержит 'U',
-        'DNA' в остальных случаях (по умолчанию).
+        str or bool: returns False, if NA type could not be defined;
+        string 'RNA', if sequence contain 'U',
+        otherwise 'DNA' (default).
     """
     for base in na:
         has_t = "T" in na.upper()
@@ -38,13 +39,13 @@ def na_type(na: str) -> str or bool:
 
 def transcribe(na: str) -> str:
     """
-    Функция возвращает транскрипт цепи ДНК
+    Finding DNA trancscripte
 
     Args:
-        na (str): последовательность ДНК
+        na (str): DNA sequence
 
     Returns:
-        str: последовательность РНК
+        str: RNA sequence
     """
     dna_to_rna_dict = {
         "A": "A",
@@ -61,26 +62,26 @@ def transcribe(na: str) -> str:
 
 def reverse(na: str) -> str:
     """
-    Функция находит обратную цепь ДНК или РНК.
+    Finding reverse chain of DNA or RNA
 
     Args:
-        na (str): последовательность.
+        na (str): sequence
 
     Returns:
-        str: обратная последовательность.
+        str: reverse sequence
     """
     return na[::-1]
 
 
 def complement(na: str) -> str:
     """
-    Функция находит комплементарную цепь ДНК или РНК.
+     Finding complementary chain of DNA or RNA
 
     Args:
-        na (str): последовательность.
+        na (str): sequence
 
     Returns:
-        str: комплементарная последовательность.
+        str: complementary sequence
     """
     na_dict = {
         "A": "T",
@@ -99,12 +100,12 @@ def complement(na: str) -> str:
 
 def reverse_complement(na: str) -> str:
     """
-    Функция находит обратную комплементарную цепь ДНК или РНК.
+    Finding reverse complement of DNA or RNA
 
     Args:
-        na (str): последовательность.
+        na (str): sequence
 
     Returns:
-        str: обратная комплементарная последовательность.
+        str: reverse complement
     """
     return reverse(complement(na))

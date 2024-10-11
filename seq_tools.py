@@ -1,7 +1,9 @@
 from modules.filter_fastq_modules import (
-    filter_gc,
-    filter_length,
-    filter_quality,
+    is_gc_valid,
+    is_length_valid,
+    is_quality_valid,
+    read_fastq_file,
+    write_output_fastq,
 )
 from modules.dna_rna_tools_modules import (
     is_na,
@@ -14,51 +16,50 @@ from modules.dna_rna_tools_modules import (
 
 
 def filter_fastq(
-    seqs: dict[str, tuple[str, str]],
+    path: str,
+    output_file: str = "output_filter_fastq.fastq",
     gc_bounds: tuple[float, float] = (0, 100),
     length_bounds: tuple[float, float] = (0, 2**32),
     quality_threshold: float = 0,
-) -> dict[str, tuple[str, str]]:
-    """
-    Фильтрует риды в формате FASTQ по GC-составу, длине рида и качеству рида.
-    Параметры:
-    seqs (dict[str, tuple[str, str]]): словарь,
-    ключами которого являются названия ридов,
-    а значениями - кортежи, состоящие из сиквенса и его качества.
-    gc_bounds (tuple[float, float]): Интервал GC-состава для фильтрации
-    (по умолчанию (0, 100)).
-    length_bounds (tuple[int, int]): Интервал длины для фильтрации
-    (по умолчанию (0, 2**32)).
-    quality_threshold (float): Пороговое значение среднего качества рида,
-    по умолчанию 0.
-    Возвращает словарь вида dict[str, tuple[str, str]],
-    ключами которого являются названия отфильтрованных сиквенсов,
-    а значениями - кортежи, состоящие из сиквенса и его качества.
+) -> None:
+    """filter FASTQ sequences according to length, GC and quality thresholds.
+    Result is saved in output file in a direcroty 'filtered'.
 
+    Args:
+        path (str): path to FASTQ sequences
+        output_file (str, optional): output file name with extension.
+        Defaults to 'output_filter_fastq.fastq'.
+        gc_bounds (tuple[float, float], optional):
+        GC bounds. Defaults to (0, 100).
+        length_bounds (tuple[float, float], optional):
+        length bounds. Defaults to (0, 2**32).
+        quality_threshold (float, optional): quality bound. Defaults to 0.
     """
+    seqs = read_fastq_file(path)
 
-    filtered_seqs = filter_gc(seqs, gc_bounds)
-    filtered_seqs = filter_length(filtered_seqs, length_bounds)
-    filtered_seqs = filter_quality(filtered_seqs, quality_threshold)
-    return filtered_seqs
+    for name, (sequence, quality) in seqs.items():
+        if (
+            is_gc_valid(sequence, gc_bounds)
+            and is_length_valid(sequence, length_bounds)
+            and is_quality_valid(quality, quality_threshold)
+        ):
+            write_output_fastq(name, sequence, quality, output_file)
 
 
 def run_dna_rna_tools(*args: str) -> list:
-    """
-    Функция выполняет заданные операции с последовательностью ДНК или РНК.
-    Параметры (args):
-        - позиционные аргументы: строки,
-        представляющие собой последовательности ДНК/РНК,
-        - последний аргумент должен быть строкой,
-        указывающей на тип операции
-        (например, "transcribe", "reverse", и т.д.).
-        В случае попытки передать неправильный
-        тип операции или последовательности РНК/ДНК,
-        соответствующая ошибка будет напечатана на экране.
+    """finding different chains of DNA and/or RNA.
+    In case of transmission incorrect type of operation or RNA/DNA sequence,
+    the corresponding error will be printed on the screen.
+
+    Args:
+        positional arguments, consisting of nucleic acid sequences.
+        Last argument is operation:
+        transcribe, reverse, complement or reverse complement
 
     Returns:
-        list: список результатов
-        str: только один результат
+        list: list of strings sequences or None's (in case of errors)
+        str: if there is only 1 result
+
     """
     task = args[-1]
     operations = {
@@ -69,25 +70,30 @@ def run_dna_rna_tools(*args: str) -> list:
     }
     stderr = {}
     ans = []
+
     for seq in args[:-1]:
         if task not in operations:
+            ans.append(None)
             stderr[seq] = (0, "operation type is not supported")
+            continue
+        if not is_na(seq):
+            ans.append(None)
+            stderr[seq] = (0, "is not NA")
+            continue
+        if not na_type(seq):
+            ans.append(None)
+            stderr[seq] = (na_type(seq), "RNA and DNA mix")
         else:
-            if not is_na(seq):
-                stderr[seq] = (is_na(seq), "is not NA")
+            if task != "transcribe":
+                ans.append(operations.get(task)(seq))
+            elif task == "transcribe" and na_type(seq) == "DNA":
+                ans.append(operations.get(task)(seq))
             else:
-                if not na_type(seq):
-                    stderr[seq] = (na_type(seq), "RNA and DNA mix")
-                else:
-                    if task != "transcribe":
-                        ans.append(operations.get(task)(seq))
-                    elif task == "transcribe" and na_type(seq) == "DNA":
-                        ans.append(operations.get(task)(seq))
-                    else:
-                        stderr[seq] = (
-                            0,
-                            "operation type is not compatible with NA type",
-                        )
+                ans.append(None)
+                stderr[seq] = (
+                    0,
+                    "operation type is not compatible with NA type",
+                )
     if stderr:
         for seq, (result, message) in stderr.items():
             print(f" {seq} : {message}")
