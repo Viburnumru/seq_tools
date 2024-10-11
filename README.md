@@ -11,7 +11,7 @@ Seq Tools is a toolkit for working with DNA and RNA sequences, as well as for fi
            |- dna_rna_tools_modules.py
            |- filter_fastq_modules.py
            |- bioprocessor_modules.py
-     |- examples of usage/
+     |- examples/
  ```
 
 Author: Anna Kalinina
@@ -96,15 +96,17 @@ All functions from modules could be imported and used separately.
 
 ## Examples of usage
 
-You may find example input and output files in the **Examples of usage folder**
+You may find example input and output files in the **Examples** folder
 
-Seq_tools:
-Filtering with default parameters. Example file - *example_fastq.fastq*. 
+**Seq_tools: filter_fastq**
+Filtering with default parameters. 
+Example file - *example_fastq.fastq*. 
+Input:
 ```
 filter_fastq(path, 'example_output.fastq', gc_bounds=(0, 100), length_bounds=(0,2**32), quality_threshold=0)
 ```
 
-Seqtools: reverse chain 
+**Seqtools: dna_rna_tools**
 Input:
 ```
 run_dna_rna_tools('AtgC', 'AUt', 'Anna', 'gaC', 'reverse')
@@ -119,7 +121,8 @@ on the screen following errors were printed:
  Anna : is not NA
 ```
 
-Bio_files_processor.
+**Bio_files_processor**
+
 convert_multiline_fasta_to_oneline
 example file - *example_multiline_fasta.fasta
 
