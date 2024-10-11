@@ -88,59 +88,57 @@ Additional functions are stored separately in the folder 'modules':
 These functions requires FASTQ input format (see *Examples of usage*).
 
 3. **bioprocessor_modules.py**
-   - *genes_from_gbk* extracts gene names and their translations from a GenBank (.gbk) file.
-   - *find_genes_of_interest* searchs neigbor genes of a target gene
-   - *save_to_fasta* saves genes to fasta file
+   - *genes_from_gbk* extracts gene names and their translations from a GenBank (.gbk) file.  
+   - *find_genes_of_interest* searchs neigbor genes of a target gene  
+   - *save_to_fasta* saves genes to fasta file  
    
-All functions from modules could be imported and used separately.
+All functions from modules could be imported and used separately.  
 
 ## Examples of usage
 
-You may find example input and output files in the **Examples** folder
+You may find example input and output files in the **Examples** folder.  
 
-**Seq_tools: filter_fastq**
-Filtering with default parameters. 
-Example file - *example_fastq.fastq*. 
-Input:
+**Seq_tools: filter_fastq**  
+Filtering with default parameters.    
+Example file - *example_fastq.fastq*.   
+Input:  
 ```
 filter_fastq(path, 'example_output.fastq', gc_bounds=(0, 100), length_bounds=(0,2**32), quality_threshold=0)
 ```
 
-**Seqtools: dna_rna_tools**
-Input:
+**Seqtools: dna_rna_tools**  
+Input:  
 ```
 run_dna_rna_tools('AtgC', 'AUt', 'Anna', 'gaC', 'reverse')
 ```
-Output:
+Output:  
 ```
 ['CgtA', None, None, 'Cag']
 ```
-on the screen following errors were printed:
+on the screen following errors were printed:  
 ```
  AUt : RNA and DNA mix
  Anna : is not NA
 ```
 
-**Bio_files_processor**
+**Bio_files_processor**  
 
-convert_multiline_fasta_to_oneline
-example file - *example_multiline_fasta.fasta
+convert_multiline_fasta_to_oneline  
+example file - *example_multiline_fasta.fasta  
 
-Input:
+Input:  
 ```
 convert_multiline_fasta_to_oneline(path_convertion, 'output_file_conversion.fastq')
-```
-
-parse_blast_output
-example file - *example_gbk.gbk*
+``` 
+example file - *example_gbk.gbk*  
 
 Input:
 ```
 parse_blast_output(path_blast, 'blast_output.txt')
 ```
 
-select_genes_from_gbk_to_fasta
-example file - *example_gbk.gbk*
+select_genes_from_gbk_to_fasta  
+example file - *example_gbk.gbk*  
 
 Input:
 ```
