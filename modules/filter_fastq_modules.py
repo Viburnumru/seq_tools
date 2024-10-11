@@ -2,7 +2,7 @@ import numbers
 import os
 
 
-def make_bounds(bounds: int, tuple) -> tuple:
+def make_bounds(bounds: [int, tuple]) -> tuple:
     """Converts a given bounds into a tuple format.
 
     Args:
