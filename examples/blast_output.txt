@@ -1,0 +1,37 @@
+conjugal transfer protein TraA
+conjugal transfer protein TraC
+DinI-like family protein
+DNA methylase
+DUF1380 domain-containing protein
+DUF1380 family protein
+DUF4158 domain-containing protein
+DUF905 domain-containing protein, partial
+extended-spectrum class A beta-lactamase CTX-M-15
+hypothetical protein
+hypothetical protein AI3070V1_1489
+hypothetical protein AM398_25285
+hypothetical protein DPF89_04680
+hypothetical protein HUSEC41_28100
+KlcA
+ParB/RepB/Spo0J family partition protein
+PilI type IV pilus biogenesis protein, partial
+PilK
+PilN family type IVB pilus formation outer membrane protein
+ProQ/FINO family protein
+protein impA, partial
+PsiB
+putative dNA methylase
+recombinase family protein
+replication initiation protein
+single-stranded DNA-binding protein
+TEM family class A beta-lactamase, partial
+Tn3-like element Tn3 family transposase
+TnpA
+transcription termination factor NusG
+Type II plasmid partioning protein
+type IV pilus biogenesis lipoprotein PilL
+type IV pilus biogenesis protein PilM
+WbuC family cupin fold metalloprotein
+Y-family DNA polymerase
+YagA
+YchA
