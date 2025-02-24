@@ -287,6 +287,69 @@ class AminoAcidSequence(BiologicalSequence):
             raise ValueError("Sequence is too short to be a valid protein")
         return True
 
+def run_dna_rna_tools(*args: str) -> list:
+    """Applies a specified operation (e.g., 'reverse', 'complement', etc.) to DNA or RNA sequences.
+
+    Args:
+        *args: Variable number of arguments. The last argument is the operation:
+               'transcribe', 'reverse', 'complement', or 'reverse_complement'.
+               The rest are nucleic acid sequences.
+
+    Returns:
+        list: A list of processed sequences or None (in case of errors).
+              If there is only one result, returns it as a string.
+    """
+    if not args:
+        return []
+
+    task = args[-1]
+    sequences = args[:-1]
+
+    operations = {
+        "transcribe": lambda seq: str(seq.transcribe()),
+        "reverse": lambda seq: str(seq.reverse()),
+        "complement": lambda seq: str(seq.complement()),
+        "reverse_complement": lambda seq: str(seq.reverse_complement()),
+    }
+
+    
+    stderr = {}
+    ans = []
+
+    for seq in sequences:
+        try:
+            dna_seq = DNASequence(seq)
+            if task in operations:
+                if task == "transcribe":
+                    ans.append(operations[task](dna_seq))
+                else:
+                    ans.append(operations[task](dna_seq))
+            else:
+                ans.append(None)
+                stderr[seq] = (0, "operation type is not supported")
+        except ValueError:
+            try:
+                rna_seq = RNASequence(seq)
+                if task in operations:
+                    if task == "transcribe":
+                        ans.append(None)
+                        stderr[seq] = (0, "transcribe is not applicable to RNA")
+                    else:
+                        ans.append(operations[task](rna_seq))
+                else:
+                    ans.append(None)
+                    stderr[seq] = (0, "operation type is not supported")
+            except ValueError:
+                ans.append(None)
+                stderr[seq] = (0, "is not a valid DNA or RNA sequence")
+
+    if stderr:
+        for seq, (result, message) in stderr.items():
+            print(f"{seq} : {message}")
+    if len(ans) == 1:
+        return ans[0]
+    return ans
+
 
 def filter_fastq(
     input_file: str,
