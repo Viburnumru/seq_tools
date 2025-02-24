@@ -8,8 +8,6 @@ Seq Tools is a toolkit for working with DNA and RNA sequences, as well as for fi
      |- seq_tools.py
      |- bio_files_processor.py
      |- modules/
-           |- dna_rna_tools_modules.py
-           |- filter_fastq_modules.py
            |- bioprocessor_modules.py
      |- examples/
  ```
@@ -26,10 +24,8 @@ Author: Anna Kalinina
 - [Examples of usage](##examples-of-usage)
 
 ## Installation
-To run `Seq_tools` or `bio_files_processor.py` you need to have Python 3.x installed. To check this: 
- ```bash
-python --version
-  ```
+To run `Seq_tools` or `bio_files_processor.py` you need to have Python 3.x, biopython (Bio) module installed. 
+
 clone or download manually repository: 
  ```
 git clone  https://github.com/Viburnumru/seq_tools.git
@@ -38,19 +34,39 @@ git clone  https://github.com/Viburnumru/seq_tools.git
 ## Main functions
 ### Seq_tools
 
-Main script `seq_tools.py` consist of `filter_fastq` and `run_dna_rna_tools` functions.
+Main script `seq_tools.py`.
 
-`Run_dna_rna_tools` performs the specified operations on a DNA or/and RNA sequence.  
-Operations includes "transcribe", "reverse", "complement" and "reverse_complement".
-In case of attempting to pass an incorrect operation type or RNA/DNA sequence, an appropriate error will be printed on the screen.
+`seq_tools.py` performs the specified operations on a DNA or/and RNA sequence.  
+Operations includes "transcribe" for DNA, "reverse", "complement" and "reverse_complement" for both DNA and RNA.
 
-Returns:
-list: a list of results  
-str: a single result  
+This Python library provides classes for handling and manipulating biological sequences, including DNA, RNA, and protein sequences. It is built using object-oriented programming principles and leverages the abc module for abstract base classes.
+
+Abstract Base Class: BiologicalSequence provides a foundation for all sequence types.
+
+DNA and RNA Sequences: Classes for handling nucleic acid sequences, including complement, reverse, and reverse-complement operations.
+
+Protein Sequences: Class for handling amino acid sequences, including validation and alphabet checking.
+
+`Run_dna_rna_tools` performs the specified operations on a DNA or/and RNA sequence.
+Operations includes "transcribe", "reverse", "complement" and "reverse_complement". In case of attempting to pass an incorrect operation type or RNA/DNA sequence, an appropriate error will be printed on the screen.
+
+Returns: list: a list of results
+str: a single result
 
 `Filter_fastq` filters reads file in FASTQ format and filters sequences based on GC content, read length, and read quality.
 
-Filtered sequences are stored in a file in the folder 'filtered'. Filtered sequences are the same structure as  input FASTQ, but only sequences passed all criteria are included.
+Filtered sequences are stored in a file in the folder 'filtered'. Filtered sequences are the same structure as  input FASTQ, but only sequences passed all criteria are included. If the filtered directory does not exist, it will be created automatically.
+
+**Parameters**:
+input_file (str): Path to the input FASTQ file.
+
+output_file (str, optional): Name of the output file. Defaults to output_filter_fastq.fastq.
+
+gc_bounds (tuple[float, float], optional): Minimum and maximum GC content (as percentages). Defaults to (0, 100).
+
+length_bounds (tuple[int, int], optional): Minimum and maximum sequence length. Defaults to (0, 2**32).
+
+quality_threshold (float, optional): Minimum average quality score (Phred score). Defaults to 0.
 
 ### Bio_files_processor
 
@@ -60,34 +76,7 @@ Main script `Bio_files_processor.py` operates with Fasta and Gbk formats. It all
 ## Modules
 
 Additional functions are stored separately in the folder 'modules':
-1. **dna_rna_tools_modules.py**
-   consist of functions required for sequence check:
-    - *is_na* checks if sequence contains nucleotides;
-    - *na_type* checks if sequence contains only one type (DNA or RNA) nucleotides;
-      
-   and main functions:
-   
-    - funcion *transcribe* (works only with DNA sequences);
-    - function *complement* returns complementary strand; 
-    - function *reverse returns* reverse strand;
-    - function *reverse_complement* returns reverse complement strand;
- These functions are case sensitive.
-
-2. **filter_fastq_modules.py**
-   consist of functions required for boundaries check:
-   - *make_bounds* make bounds in required tuple format
-   - *is_bounded* checks if criteria passed or not
-  
-     
-   and mail functions:   
-   - *gc_count*, which returns GC content in %;
-   - *filter_gc*, which checks if sequence passes gc threshold;
-   - *filter_length*, which checks if sequence passes length threshold;
-   - *filter_quality*, which checks if sequence passes quality threshold
-
-These functions requires FASTQ input format (see *Examples of usage*).
-
-3. **bioprocessor_modules.py**
+1.  **bioprocessor_modules.py**
    - *genes_from_gbk* extracts gene names and their translations from a GenBank (.gbk) file.  
    - *find_genes_of_interest* searchs neigbor genes of a target gene  
    - *save_to_fasta* saves genes to fasta file  
@@ -103,22 +92,30 @@ Filtering with default parameters.
 Example file - *example_fastq.fastq*.   
 Input:  
 ```
-filter_fastq(path, 'example_output.fastq', gc_bounds=(0, 100), length_bounds=(0,2**32), quality_threshold=0)
+filter_fastq(path, 'filtered_example.fastq', gc_bounds=(0, 100), length_bounds=(0,2**32), quality_threshold=0)
 ```
 
 **Seqtools: dna_rna_tools**  
 Input:  
 ```
-run_dna_rna_tools('AtgC', 'AUt', 'Anna', 'gaC', 'reverse')
+DNASequence("atCG").complement()
 ```
-Output:  
+Output:  taGC
+
+The acces to previous functionallity is still available. In case you need to manipulate several sequences simultaneously: 
+Input:
 ```
-['CgtA', None, None, 'Cag']
+run_dna_rna_tools('AtgC', 'AUt', 'Anna', 'gaC', 'reverse_complement')
+
 ```
-on the screen following errors were printed:  
+Output:
 ```
- AUt : RNA and DNA mix
- Anna : is not NA
+['GcaT', None, None, 'Gtc']
+```
+Following errors will be printed on screen:
+```
+AUt : is not a valid DNA or RNA sequence
+Anna : is not a valid DNA or RNA sequence
 ```
 
 **Bio_files_processor**  
