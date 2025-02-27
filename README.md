@@ -47,12 +47,6 @@ DNA and RNA Sequences: Classes for handling nucleic acid sequences, including co
 
 Protein Sequences: Class for handling amino acid sequences, including validation and alphabet checking.
 
-`Run_dna_rna_tools` performs the specified operations on a DNA or/and RNA sequence.
-Operations includes "transcribe", "reverse", "complement" and "reverse_complement". In case of attempting to pass an incorrect operation type or RNA/DNA sequence, an appropriate error will be printed on the screen.
-
-Returns: list: a list of results
-str: a single result
-
 `Filter_fastq` filters reads file in FASTQ format and filters sequences based on GC content, read length, and read quality.
 
 Filtered sequences are stored in a file in the folder 'filtered'. Filtered sequences are the same structure as  input FASTQ, but only sequences passed all criteria are included. If the filtered directory does not exist, it will be created automatically.
@@ -95,28 +89,13 @@ Input:
 filter_fastq(path, 'filtered_example.fastq', gc_bounds=(0, 100), length_bounds=(0,2**32), quality_threshold=0)
 ```
 
-**Seqtools: dna_rna_tools**  
+**Seqtools:**  
 Input:  
 ```
 DNASequence("atCG").complement()
 ```
 Output:  taGC
 
-The acces to previous functionallity is still available. In case you need to manipulate several sequences simultaneously: 
-Input:
-```
-run_dna_rna_tools('AtgC', 'AUt', 'Anna', 'gaC', 'reverse_complement')
-
-```
-Output:
-```
-['GcaT', None, None, 'Gtc']
-```
-Following errors will be printed on screen:
-```
-AUt : is not a valid DNA or RNA sequence
-Anna : is not a valid DNA or RNA sequence
-```
 
 **Bio_files_processor**  
 
