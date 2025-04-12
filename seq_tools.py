@@ -1,102 +1,333 @@
-from modules.filter_fastq_modules import (
-    is_gc_valid,
-    is_length_valid,
-    is_quality_valid,
-    read_fastq_file,
-    write_output_fastq,
-)
-from modules.dna_rna_tools_modules import (
-    is_na,
-    na_type,
-    transcribe,
-    reverse,
-    complement,
-    reverse_complement,
-)
+from abc import ABC, abstractmethod
+import os
+from Bio import SeqIO
+from Bio.SeqUtils import gc_fraction
+
+
+class BiologicalSequence(ABC):
+    """Abstract base class representing a biological sequence (e.g., DNA, RNA, protein).
+    This class provides basic functionality for handling biological sequences,
+    including validation, length calculation, and indexing. Subclasses must
+    implement the `_check_alphabet` method to ensure the sequence contains
+    valid characters for the specific type of biological sequence.
+
+    Args:
+        sequence (str): The biological sequence as a string.
+    Raises:
+        ValueError: If the sequence contains invalid characters (as determined
+                    by the `_check_alphabet` method).
+    """
+    def __init__(self, sequence: str):
+        """initialization
+
+        Args:
+            sequence (str): biosequence as a string
+
+        Raises:
+            ValueError: in case of wrong characteres 
+        """
+        self.sequence = sequence
+        if not self._check_alphabet():
+            raise ValueError(
+                f"Invalid characters in sequence: {self.sequence}"
+            )
+
+    def __len__(self) -> int:
+        """
+        Returns:
+            int: returns len of sequence
+        """
+        return len(self.sequence)
+
+    def __getitem__(self, index):
+        """Get a character or slice of the biological sequence by index.
+
+        Args:
+            index (int or slice)
+
+        Returns:
+            str: slice of sequence
+        """
+        return self.sequence[index]
+
+    def __str__(self) -> str:
+        """
+
+        Returns:
+            str: sequence as a string.
+        """
+        return self.sequence
+
+    def __repr__(self) -> str:
+        """
+
+        Returns:
+            str: string that can be used to recreate the object
+        """
+        return f"{self.__class__.__name__}(sequence='{self.sequence}')"
+
+    @abstractmethod
+    def _check_alphabet(self) -> bool:
+        """Checks if the sequence contains only allowed characters.
+
+        This method must be implemented by subclasses to validate the sequence
+        based on the allowed characters for the specific type of biological
+        sequence (e.g., DNA, RNA, protein).
+
+        Returns:
+            bool: True if the sequence is valid, False otherwise.
+        """
+        pass
+
+
+class NucleicAcidSequence(BiologicalSequence):
+    """A base class representing a nucleic acid sequence (DNA or RNA).
+
+    This class provides common functionality for nucleic acid sequences, such as
+    complement, reverse, and reverse complement operations. It is intended to be
+    subclassed by `DNASequence` and `RNASequence`.
+
+    Attributes:
+        _complement_map (dict): A dictionary mapping each nucleotide to its complement.
+                                This should be defined in subclasses (e.g., DNA or RNA).
+
+
+    Raises:
+        NotImplementedError: if user tries to create DNA\RNA sequence or find its complement, 
+        reverse or reverse_complement through `NucleicAcidSequence` instead of `DNASequence` and `RNASequence`.
+    """
+    _complement_map = {}
+
+    def _check_alphabet(self) -> bool:
+        """Check if the sequence contains only valid nucleotides.
+
+        This method ensures that the sequence contains only characters defined in
+        `_complement_map`. It raises a `NotImplementedError` if called directly on
+        `NucleicAcidSequence` (use `DNASequence` or `RNASequence` instead).
+
+        Returns:
+            bool: True if the sequence is valid, False otherwise.
+
+        Raises:
+            NotImplementedError: If called directly on `NucleicAcidSequence`.
+
+        """
+        
+        if self.__class__ == NucleicAcidSequence:
+            raise NotImplementedError(
+                "for DNA/RNA creation use DNASequence or RNASequence"
+            )
+        return set(self.sequence).issubset(self._complement_map.keys())
+
+    def complement(self):
+        """This method creates a new sequence where each nucleotide is replaced by its
+        complement (as defined in `_complement_map`). It raises a `NotImplementedError`
+        if called directly on `NucleicAcidSequence`.
+
+        Raises:
+            NotImplementedError: If called directly on `NucleicAcidSequence`.
+
+        Returns:
+            NucleicAcidSequence: A new sequence representing the complement
+        """
+        if self.__class__ == NucleicAcidSequence:
+            raise NotImplementedError("")
+        return self.__class__(
+            "".join(self._complement_map[n] for n in self.sequence)
+        )
+
+    def reverse(self):
+        """This method creates a new sequence where each nucleotide is replaced by its
+        reverse (as defined in `_complement_map`). It raises a `NotImplementedError`
+        if called directly on `NucleicAcidSequence`.
+
+        Raises:
+            NotImplementedError: If called directly on `NucleicAcidSequence`.
+
+        Returns:
+            NucleicAcidSequence: A new sequence representing the reverse of input sequence.
+        """
+        if self.__class__ == NucleicAcidSequence:
+            raise NotImplementedError("")
+        return self.__class__(self.sequence[::-1])
+
+    def reverse_complement(self):
+        """This method creates a new sequence where each nucleotide is replaced by its
+        reverse_complement (as defined in `_complement_map`). It raises a `NotImplementedError`
+        if called directly on `NucleicAcidSequence`.
+
+        Raises:
+            NotImplementedError: If called directly on `NucleicAcidSequence`.
+
+        Returns:
+            NucleicAcidSequence: A new sequence representing the reverse_complement of input sequence.
+        """
+        if self.__class__ == NucleicAcidSequence:
+            raise NotImplementedError("")
+        return self.complement().reverse()
+
+
+class DNASequence(NucleicAcidSequence):
+    """A class representing a DNA sequence.
+
+    This class inherits from `NucleicAcidSequence` and provides additional functionality
+    specific to DNA sequences, such as transcription and complementarity rule.
+
+    Args:
+        NucleicAcidSequence (str): DNA string, case sensitive
+
+    Attributes:
+        _complement_map (dict): A dictionary mapping each DNA nucleotide to its complement.
+                                Includes both uppercase and lowercase mappings.
+
+    """
+    _complement_map = {
+        "A": "T",
+        "T": "A",
+        "G": "C",
+        "C": "G",
+        "a": "t",
+        "t": "a",
+        "g": "c",
+        "c": "g",
+    }
+
+    def transcribe(self):
+        """method for transcription
+
+        Returns:
+            str: transcribed RNA chain as RNASequence
+        """
+        translation_table = str.maketrans({"T": "U", "t": "u"})
+        transcribed_sequence = self.sequence.translate(translation_table)
+        return RNASequence(transcribed_sequence)
+
+
+class RNASequence(NucleicAcidSequence):
+     """A class representing a RNA sequence.
+
+    This class inherits from `NucleicAcidSequence` and provides additional functionality
+    specific to DNA sequences, such as complementarity rule.
+
+    Args:
+        NucleicAcidSequence (str): RNA string, case sensitive
+
+    Attributes:
+        _complement_map (dict): A dictionary mapping each RNA nucleotide to its complement.
+                                Includes both uppercase and lowercase mappings.
+
+    """
+    _complement_map = {
+        "A": "U",
+        "G": "C",
+        "U": "A",
+        "C": "G",
+        "a": "u",
+        "u": "a",
+        "g": "c",
+        "c": "g",
+    }
+
+
+class AminoAcidSequence(BiologicalSequence):
+   
+    """A class representing an amino acid sequence (protein).
+    This class inherits from `BiologicalSequence` and provides functionality
+    specific to protein sequences, such as validation and alphabet checking.
+
+    Attributes:
+        _valid_amino_acids (set): A set of valid amino acid characters, including
+                                  the stop codon symbol as `*`.
+        _start_codon (str): The start codon for protein sequences (methionine, "M"). 
+
+    Raises:
+        ValueError: in case sequence is empty 
+        ValueError: in case characters in sequence are not allowed
+        ValueError: in case sequence does not start from methionine 
+        ValueError: in case sequence us too short to form a protein
+
+    """
+    _valid_amino_acids = set("ACDEFGHIKLMNPQRSTVWY*")
+    _start_codon = "M"
+
+    def _check_alphabet(self) -> bool:
+        """Checks if the sequence contains only allowed characters.
+
+        This method must be implemented by subclasses to validate the sequence
+        based on the allowed characters for protein).
+
+        Returns:
+            bool: True if the sequence is valid, False otherwise.
+        
+        """
+        
+        if not self.sequence:
+            return False
+        return set(self.sequence.upper()).issubset(self._valid_amino_acids)
+
+    def validate_protein(self) -> bool:
+        """
+        Raises:
+            ValueError: in case sequence is empty 
+            ValueError: in case characters in sequence are not allowed
+            ValueError: in case sequence does not start from methionine 
+            ValueError: in case sequence us too short to form a protein
+
+        Returns:
+            bool: True if the sequence is a valid protein, otherwise raises an exception
+        """
+         
+        if not self.sequence:
+            raise ValueError("Sequence is empty")
+        if not self._check_alphabet():
+            raise ValueError("")
+        if self.sequence[0] != self._start_codon:
+            raise ValueError("Sequence does not start with methionine (M)")
+        if len(self.sequence) < 20:
+            raise ValueError("Sequence is too short to be a valid protein")
+        return True
 
 
 def filter_fastq(
-    path: str,
-    output_file: str = "output_filter_fastq.fastq",
+    input_file: str,
+    output_file: str = "output_filter.fastq",
     gc_bounds: tuple[float, float] = (0, 100),
-    length_bounds: tuple[float, float] = (0, 2**32),
+    length_bounds: tuple[int, int] = (0, 2**32),
     quality_threshold: float = 0,
 ) -> None:
-    """filter FASTQ sequences according to length, GC and quality thresholds.
-    Result is saved in output file in a direcroty 'filtered'.
+    """Filter FASTQ sequences according to length, GC content, and quality thresholds.
+    The result is saved in an output file in a directory named 'filtered'.
 
     Args:
-        path (str): path to FASTQ sequences
-        output_file (str, optional): output file name with extension.
-        Defaults to 'output_filter_fastq.fastq'.
-        gc_bounds (tuple[float, float], optional):
-        GC bounds. Defaults to (0, 100).
-        length_bounds (tuple[float, float], optional):
-        length bounds. Defaults to (0, 2**32).
-        quality_threshold (float, optional): quality bound. Defaults to 0.
+        input_file (str): Path to the input FASTQ file.
+        output_file (str, optional): Output file name with extension.
+            Defaults to 'output_filter.fastq'.
+        gc_bounds (tuple[float, float], optional): GC content bounds (min, max).
+            Defaults to (0, 100).
+        length_bounds (tuple[int, int], optional): Length bounds (min, max).
+            Defaults to (0, 2**32).
+        quality_threshold (float, optional): Minimum average quality score.
+            Defaults to 0.
     """
-    seqs = read_fastq_file(path)
+    output_dir = "filtered"
+    os.makedirs(output_dir, exist_ok=True)
+    output_path = os.path.join(output_dir, output_file)
 
-    for name, (sequence, quality) in seqs.items():
+    filtered_records = []
+    for record in SeqIO.parse(input_file, "fastq"):
+        if not record.seq:
+            continue
+
+        gc_content = gc_fraction(record.seq) * 100
+        avg_quality = sum(record.letter_annotations["phred_quality"]) / len(
+            record
+        )
+
         if (
-            is_gc_valid(sequence, gc_bounds)
-            and is_length_valid(sequence, length_bounds)
-            and is_quality_valid(quality, quality_threshold)
+            gc_bounds[0] <= gc_content <= gc_bounds[1]
+            and length_bounds[0] <= len(record) <= length_bounds[1]
+            and avg_quality >= quality_threshold
         ):
-            write_output_fastq(name, sequence, quality, output_file)
+            filtered_records.append(record)
 
-
-def run_dna_rna_tools(*args: str) -> list:
-    """finding different chains of DNA and/or RNA.
-    In case of transmission incorrect type of operation or RNA/DNA sequence,
-    the corresponding error will be printed on the screen.
-
-    Args:
-        positional arguments, consisting of nucleic acid sequences.
-        Last argument is operation:
-        transcribe, reverse, complement or reverse complement
-
-    Returns:
-        list: list of strings sequences or None's (in case of errors)
-        str: if there is only 1 result
-
-    """
-    task = args[-1]
-    operations = {
-        "transcribe": transcribe,
-        "reverse": reverse,
-        "complement": complement,
-        "reverse_complement": reverse_complement,
-    }
-    stderr = {}
-    ans = []
-
-    for seq in args[:-1]:
-        if task not in operations:
-            ans.append(None)
-            stderr[seq] = (0, "operation type is not supported")
-            continue
-        if not is_na(seq):
-            ans.append(None)
-            stderr[seq] = (0, "is not NA")
-            continue
-        if not na_type(seq):
-            ans.append(None)
-            stderr[seq] = (na_type(seq), "RNA and DNA mix")
-        else:
-            if task != "transcribe":
-                ans.append(operations.get(task)(seq))
-            elif task == "transcribe" and na_type(seq) == "DNA":
-                ans.append(operations.get(task)(seq))
-            else:
-                ans.append(None)
-                stderr[seq] = (
-                    0,
-                    "operation type is not compatible with NA type",
-                )
-    if stderr:
-        for seq, (result, message) in stderr.items():
-            print(f" {seq} : {message}")
-    if len(ans) == 1:
-        return ans[0]
-    return ans
+    SeqIO.write(filtered_records, output_path, "fastq")
