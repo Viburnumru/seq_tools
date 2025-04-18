@@ -2,7 +2,10 @@ from abc import ABC, abstractmethod
 import os
 from Bio import SeqIO
 from Bio.SeqUtils import gc_fraction
-
+import argparse
+from argparse import ArgumentParser
+import logging
+from datetime import datetime
 
 class BiologicalSequence(ABC):
     """Abstract base class representing a biological sequence (e.g., DNA, RNA, protein).
@@ -81,19 +84,18 @@ class BiologicalSequence(ABC):
 
 
 class NucleicAcidSequence(BiologicalSequence):
-    """A base class representing a nucleic acid sequence (DNA or RNA).
+    """ A base class representing a nucleic acid sequence (DNA or RNA).
 
-    This class provides common functionality for nucleic acid sequences, such as
-    complement, reverse, and reverse complement operations. It is intended to be
-    subclassed by `DNASequence` and `RNASequence`.
+        This class provides common functionality for nucleic acid sequences, such as
+        complement, reverse, and reverse complement operations. It is intended to be
+        subclassed by `DNASequence` and `RNASequence`.
 
     Attributes:
         _complement_map (dict): A dictionary mapping each nucleotide to its complement.
                                 This should be defined in subclasses (e.g., DNA or RNA).
 
-
     Raises:
-        NotImplementedError: if user tries to create DNA\RNA sequence or find its complement, 
+        NotImplementedError: if user tries to create DNA or RNA sequence or find its complement, 
         reverse or reverse_complement through `NucleicAcidSequence` instead of `DNASequence` and `RNASequence`.
     """
     _complement_map = {}
@@ -168,7 +170,7 @@ class NucleicAcidSequence(BiologicalSequence):
 
 
 class DNASequence(NucleicAcidSequence):
-    """A class representing a DNA sequence.
+    """ A class representing a DNA sequence.
 
     This class inherits from `NucleicAcidSequence` and provides additional functionality
     specific to DNA sequences, such as transcription and complementarity rule.
@@ -204,7 +206,7 @@ class DNASequence(NucleicAcidSequence):
 
 
 class RNASequence(NucleicAcidSequence):
-     """A class representing a RNA sequence.
+    """A class representing a RNA sequence.
 
     This class inherits from `NucleicAcidSequence` and provides additional functionality
     specific to DNA sequences, such as complementarity rule.
@@ -287,6 +289,20 @@ class AminoAcidSequence(BiologicalSequence):
             raise ValueError("Sequence is too short to be a valid protein")
         return True
 
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler('fastq_filter.log'),
+        logging.StreamHandler()
+    ]
+)
+logger = logging.getLogger(__name__)
+
+def gc_fraction(sequence: str) -> float:
+    """Calculate GC content fraction of a sequence."""
+    gc = sequence.count('G') + sequence.count('C')
+    return gc / len(sequence) if sequence else 0
 
 def filter_fastq(
     input_file: str,
@@ -295,39 +311,69 @@ def filter_fastq(
     length_bounds: tuple[int, int] = (0, 2**32),
     quality_threshold: float = 0,
 ) -> None:
-    """Filter FASTQ sequences according to length, GC content, and quality thresholds.
-    The result is saved in an output file in a directory named 'filtered'.
+    """Filter FASTQ sequences according to length, GC content, and quality thresholds."""
+    try:
+        logger.info(f"Starting processing of file: {input_file}")
+        output_dir = "filtered"
+        os.makedirs(output_dir, exist_ok=True)
+        output_path = os.path.join(output_dir, output_file)
+        if not input_file.endswith((".fastq", ".fq")):
+            raise ValueError("Input file must be in FASTQ format")
 
-    Args:
-        input_file (str): Path to the input FASTQ file.
-        output_file (str, optional): Output file name with extension.
-            Defaults to 'output_filter.fastq'.
-        gc_bounds (tuple[float, float], optional): GC content bounds (min, max).
-            Defaults to (0, 100).
-        length_bounds (tuple[int, int], optional): Length bounds (min, max).
-            Defaults to (0, 2**32).
-        quality_threshold (float, optional): Minimum average quality score.
-            Defaults to 0.
-    """
-    output_dir = "filtered"
-    os.makedirs(output_dir, exist_ok=True)
-    output_path = os.path.join(output_dir, output_file)
+        filtered_records = []
+        for record in SeqIO.parse(input_file, "fastq"):
+            if not record.seq:
+                logger.debug(f"Skipping empty record: {record.id}")
+                continue
 
-    filtered_records = []
-    for record in SeqIO.parse(input_file, "fastq"):
-        if not record.seq:
-            continue
+            gc_content = gc_fraction(record.seq) * 100
+            avg_quality = sum(record.letter_annotations["phred_quality"]) / len(record)
 
-        gc_content = gc_fraction(record.seq) * 100
-        avg_quality = sum(record.letter_annotations["phred_quality"]) / len(
-            record
+            if (gc_bounds[0] <= gc_content <= gc_bounds[1] and
+                length_bounds[0] <= len(record) <= length_bounds[1] and
+                avg_quality >= quality_threshold):
+                filtered_records.append(record)
+
+        if not filtered_records:
+            logger.warning("No sequences passed the filtering criteria")
+        else:
+            SeqIO.write(filtered_records, output_path, "fastq")
+            logger.info(f"Successfully saved {len(filtered_records)} sequences to {output_path}")
+
+    except FileNotFoundError:
+        logger.error(f"Input file not found: {input_file}")
+        raise
+    except Exception as e:
+        logger.error(f"Error processing file {input_file}: {str(e)}", exc_info=True)
+        raise
+
+def parse_args():
+    """Parse command line arguments."""
+    parser = ArgumentParser(description="Filter FASTQ files by GC content, length and quality.")
+    parser.add_argument("input_file", help="Path to input FASTQ file")
+    parser.add_argument("-o", "--output", default="output_filter.fastq",
+                       help="Output file name (default: output_filter.fastq)")
+    parser.add_argument("--gc", nargs=2, type=float, metavar=("MIN", "MAX"),
+                       default=[0, 100], help="GC content bounds (default: 0 100)")
+    parser.add_argument("--length", nargs=2, type=int, metavar=("MIN", "MAX"),
+                       default=[0, 2**32], help="Length bounds (default: 0 2^32)")
+    parser.add_argument("--quality", type=float, default=0,
+                       help="Minimum average quality threshold (default: 0)")
+    return parser.parse_args()
+
+def main():
+    try:
+        args = parse_args()
+        filter_fastq(
+            input_file=args.input_file,
+            output_file=args.output,
+            gc_bounds=tuple(args.gc),
+            length_bounds=tuple(args.length),
+            quality_threshold=args.quality,
         )
+    except Exception as e:
+        logger.critical(f"Program failed: {str(e)}")
+        raise
 
-        if (
-            gc_bounds[0] <= gc_content <= gc_bounds[1]
-            and length_bounds[0] <= len(record) <= length_bounds[1]
-            and avg_quality >= quality_threshold
-        ):
-            filtered_records.append(record)
-
-    SeqIO.write(filtered_records, output_path, "fastq")
+if __name__ == "__main__":
+    main()
