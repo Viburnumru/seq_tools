@@ -7,9 +7,14 @@ Seq Tools is a toolkit for working with DNA and RNA sequences, as well as for fi
      |- README.md
      |- seq_tools.py
      |- bio_files_processor.py
+     |- fastq_filter.log
+     |- requirements.txt
      |- modules/
            |- bioprocessor_modules.py
      |- examples/
+     |- tests/
+            | - test_fastq_filter.py
+
  ```
 
 Author: Anna Kalinina
@@ -22,8 +27,9 @@ Author: Anna Kalinina
 - [Bio_files_processor](###Bio_files_processor)
 - [Modules](##modules)
 - [Examples of usage](##examples-of-usage)
-
-## Installation
+- [Examples of usage from command line](###examples-of-usage-from-command-line)
+- [Tests](##tests)
+## Installation and requirements
 To run `Seq_tools` or `bio_files_processor.py` you need to have Python 3.x, biopython (Bio) module installed. 
 
 clone or download manually repository: 
@@ -50,6 +56,8 @@ Protein Sequences: Class for handling amino acid sequences, including validation
 `Filter_fastq` filters reads file in FASTQ format and filters sequences based on GC content, read length, and read quality.
 
 Filtered sequences are stored in a file in the folder 'filtered'. Filtered sequences are the same structure as  input FASTQ, but only sequences passed all criteria are included. If the filtered directory does not exist, it will be created automatically.
+
+Filter_fastq is available from command line, see examples of usage below.
 
 **Parameters**:
 input_file (str): Path to the input FASTQ file.
@@ -88,6 +96,27 @@ Input:
 ```
 filter_fastq(path, 'filtered_example.fastq', gc_bounds=(0, 100), length_bounds=(0,2**32), quality_threshold=0)
 ```
+### Example of usage filter fastq_seq from command line
+
+```
+python3 seq_tools.py examples/example_fastq.fastq -o filtered_results.fastq --gc 30 70 --length 50 150 --quality 20
+```
+2025-04-13 01:23:47,206 - INFO - Starting processing of file: examples/example_fastq.fastq
+
+
+2025-04-13 01:23:47,226 - INFO - Successfully saved 34 sequences to filtered/filtered_results.fastq
+
+or
+```
+python3 seq_tools.py examples/example_fastq.fastq -o filtered_results1.fastq --gc 90 100 --length 50 150 --quality 100
+```
+2025-04-15 00:31:47,312 - INFO - Starting processing of file: examples/example_fastq.fastq
+
+
+2025-04-15 00:31:47,339 - WARNING - No sequences passed the filtering criteria
+
+Logging info is saved in fastq_filter.log. 
+
 
 **Seqtools:**  
 Input:  
@@ -95,6 +124,7 @@ Input:
 DNASequence("atCG").complement()
 ```
 Output:  taGC
+ 
 
 
 **Bio_files_processor**  
@@ -122,3 +152,22 @@ select_genes_from_gbk_to_fasta(path_gbk, genes=['dtpD', 'pxpB'], n_before=2, n_a
 
 ```
  
+## Tests
+Run pytest from ./ folder:
+```
+pytest
+```
+
+seq_tools % pytest                                         
+=============================================================================== test session starts ===============================================================================
+platform darwin -- Python 3.13.2, pytest-8.3.5, pluggy-1.5.0
+
+
+rootdir: /#########/seq_tools
+
+
+collected 8 items                                                                                                                                                                 
+
+tests/test_fastq_filter.py ........                                                                                                                                         [100%]
+
+================================================================================ 8 passed in 0.21s ================================================================================
