@@ -1,0 +1,4 @@
+2025-04-15 01:48:14,569 - INFO - Starting processing of file: examples/example_fastq.fastq
+2025-04-15 01:48:14,582 - INFO - Successfully saved 34 sequences to filtered/filtered_results.fastq
+2025-04-15 01:48:33,868 - INFO - Starting processing of file: examples/example_fastq.fastq
+2025-04-15 01:48:33,880 - WARNING - No sequences passed the filtering criteria
