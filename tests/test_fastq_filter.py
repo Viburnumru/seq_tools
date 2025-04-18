@@ -20,6 +20,8 @@ def read_fastq(path):
 
 
 def test_filter_by_length(tmp_path):
+    """  check main function: filter by length
+    """
     record1 = SeqRecord(Seq("ATGC"), id="short", letter_annotations={"phred_quality": [40]*4})
     record2 = SeqRecord(Seq("ATGCGTAT"), id="long", letter_annotations={"phred_quality": [40]*8})
     input_path = tmp_path / "length_test.fastq"
@@ -32,6 +34,9 @@ def test_filter_by_length(tmp_path):
     assert records[0].id == "long"
 
 def test_filter_by_quality(tmp_path):
+    """checks main function: filter by quality
+    
+    """
     record1 = SeqRecord(Seq("ATGCGA"), id="lowQ", letter_annotations={"phred_quality": [10]*6})
     record2 = SeqRecord(Seq("GGCCTA"), id="highQ", letter_annotations={"phred_quality": [40]*6})
     input_path = tmp_path / "quality_test.fastq"
@@ -44,6 +49,9 @@ def test_filter_by_quality(tmp_path):
     assert records[0].id == "highQ"
 
 def test_filter_by_gc_lower_bound(tmp_path):
+    """tests checks main function: filter by gc lower bound
+
+    """
     record1 = SeqRecord(Seq("ATATAT"), id="lowGC", letter_annotations={"phred_quality": [40]*6})
     record2 = SeqRecord(Seq("GCGCGC"), id="highGC", letter_annotations={"phred_quality": [40]*6})
     input_path = tmp_path / "gc_low_test.fastq"
@@ -56,6 +64,8 @@ def test_filter_by_gc_lower_bound(tmp_path):
     assert records[0].id == "highGC"
 
 def test_filter_by_gc_upper_bound(tmp_path):
+    """ tests checks main function: filter by gc upper bound
+    """
     record1 = SeqRecord(Seq("GCGCGC"), id="tooGC", letter_annotations={"phred_quality": [40]*6})
     record2 = SeqRecord(Seq("ATGCAT"), id="okGC", letter_annotations={"phred_quality": [40]*6})
     input_path = tmp_path / "gc_upper_test.fastq"
@@ -69,6 +79,9 @@ def test_filter_by_gc_upper_bound(tmp_path):
 
 
 def test_filter_all_pass(tmp_path):
+    """tests checks if all sequences passes the filter if they are good quality
+
+    """
     record = SeqRecord(Seq("ATGCGA"), id="good", letter_annotations={"phred_quality": [40]*6})
     input_path = tmp_path / "pass_test.fastq"
     write_fastq([record], input_path)
@@ -81,6 +94,9 @@ def test_filter_all_pass(tmp_path):
     
 
 def test_empty_input_file(tmp_path):
+    """test checks output file created in case empty file  
+
+    """
     input_path = tmp_path / "empty.fastq"
     input_path.write_text("") 
     output_file = "empty_out.fastq"
@@ -92,6 +108,8 @@ def test_empty_input_file(tmp_path):
 
 
 def test_no_output_file_if_no_records_pass(tmp_path):
+    """ test checks that no output file created in case no sequences passed filtering
+    """
     record = SeqRecord(Seq("ATATAT"), id="low_quality", letter_annotations={"phred_quality": [5] * 6})
     input_path = tmp_path / "input.fastq"
     write_fastq([record], input_path)
@@ -100,10 +118,12 @@ def test_no_output_file_if_no_records_pass(tmp_path):
     filter_fastq(str(input_path), output_file, quality_threshold=40, gc_bounds=(80, 100)) 
 
     output_path = Path("filtered") / output_file
-    assert not output_path.exists(), "Файл не должен быть создан, если ни одна запись не прошла фильтрацию"
+    assert not output_path.exists(), "No file if there is no filtered seqs"
 
 
 def test_invalid_file_format(tmp_path):
+    """ test checks file format has to be .fastq
+    """
     input_file = tmp_path / "not_a_fastq.txt"
     input_file.write_text("This is not a fastq file")
 
